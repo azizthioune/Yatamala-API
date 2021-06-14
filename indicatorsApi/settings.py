@@ -24,8 +24,7 @@ SECRET_KEY = 'django-insecure-2v)p01r!+nbq#*m82$l)ra2zr*(ai8*42u_2nom+f!u199u$in
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -51,21 +50,26 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'indicators',
     'rest_framework',
-    # 'corsheaders',
+
 
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 ]
+
+CORS_ORIGIN_ALLOW_ALL = True
 
 ROOT_URLCONF = 'indicatorsApi.urls'
 
@@ -86,7 +90,10 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'indicatorsApi.wsgi.application'
+#CORS_ORIGIN_ALLOW_ALL = True
+# If this is used then `CORS_ORIGIN_WHITELIST` will not have any effect
 
+#CORS_ALLOW_CREDENTIALS = True
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
@@ -111,6 +118,12 @@ DATABASES = {
 AUTH_USER_MODEL = 'indicators.User'
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
+
+JWT_AUTH = {
+    'JWT_RESPONSE_PAYLOAD_HANDLER':
+    # app_name is name of the app which contains utils.py
+    'indicators.utils.jwt_response_payload_handler',
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -146,6 +159,29 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
+
+CORS_ALLOW_METHODS = [
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+    '*'
+]
+
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    '*'
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

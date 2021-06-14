@@ -11,6 +11,5 @@ def jwt_response_payload_handler(token, user=None, request=None):
         'firstname': user['first_name'],
         'lastname': user['last_name'],
         'phone': user['phone'],
-        'user_type': user['user_type'],
-        'privilege': user['privilege']
+        'user_type': user['user_type']
     }

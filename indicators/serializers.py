@@ -32,7 +32,7 @@ class UserBoxSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('email', 'phone', 'first_name', 'last_name',
-                  'password', 'avatar', 'is_active')
+                  'password', 'avatar', 'is_active', 'user_type', 'date_joined')
         depth = 1
 
     def create(self, validated_data):
@@ -41,7 +41,8 @@ class UserBoxSerializer(serializers.ModelSerializer):
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
             phone=validated_data['phone'],
-            #avatar = validated_data['avatar'],
+            user_type=validated_data['user_type'],
+            avatar=validated_data['avatar'],
 
         )
         user.set_password(validated_data['password'])
@@ -49,21 +50,20 @@ class UserBoxSerializer(serializers.ModelSerializer):
         return user
 
 
-class UserAdminSerializer(serializers.ModelSerializer):
+class UserBasicSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'password')
-        depth = 1
+        exclude = (
+            'user_permissions', 'groups', 'is_superuser', 'is_active', 'is_staff', 'password', 'date_joined',
+            'last_login')
 
-    def create(self, validated_data):
-        user = User(
-            email=validated_data['email'],
-            #avatar = validated_data['avatar'],
-            is_active=True,
-        )
-        user.set_password(validated_data['password'])
-        user.save()
-        return user
+
+class UserPutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        exclude = (
+            'groups', 'is_superuser', 'password', 'date_joined',
+            'last_login', 'email')
 
 
 class UserVisiteurSerializer(serializers.ModelSerializer):
