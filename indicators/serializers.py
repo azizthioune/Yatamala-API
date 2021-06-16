@@ -83,22 +83,6 @@ class UserGetSerializer(serializers.ModelSerializer):
 # Serializer for Projects
 
 
-class ProjectSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Projet
-        fields = '__all__'
-
-
-class ProjetGetSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Projet
-        fields = '__all__'
-        depth = 1
-
-# Serializer for Indicators
-
-
 class IndicateurSerializer(serializers.ModelSerializer):
     nom_projet = serializers.ReadOnlyField(source='projet.nom')
 
@@ -107,6 +91,24 @@ class IndicateurSerializer(serializers.ModelSerializer):
         read_only_fields = ('id_indicateur', 'nom_projet')
         fields = '__all__'
         #fields = ('id', 'category_name', 'name',)
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Projet
+        fields = '__all__'
+
+
+class ProjetGetSerializer(serializers.ModelSerializer):
+    indicateurs = IndicateurSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Projet
+        fields = '__all__'
+        depth = 1
+
+# Serializer for Indicators
 
 
 class IndicateurGetSerializer(serializers.ModelSerializer):
