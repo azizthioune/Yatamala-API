@@ -145,131 +145,14 @@ class UserRegisterView(generics.CreateAPIView):
         }, status=status.HTTP_201_CREATED)
 
 
-class PasswordResetRequestView(generics.CreateAPIView):
+class ChangePasswordView(generics.RetrieveUpdateAPIView):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-    def post(self, request, *args, **kwargs):
-
-        # get user using email
-        # if user
-
-        if 'email' not in request.data or request.data['email'] is None:
-            return Response({
-                "status": "failure",
-                "message": "no email provided",
-                "error": "not such item"
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            user_ = User.objects.get(email=request.data['email'])
-            # generate random code
-            code_ = my_utils.get_random()
-            # crete and save pr object
-            PasswordReset.objects.create(
-                user=user_,
-                code=code_
-            )
-
-            if not 'test' in sys.argv:
-                # template from utils
-                html = my_utils.password_reset_mail_html()
-                text = my_utils.password_reset_mail_txt()
-
-                html = html.replace('{{first_name}}', user_.first_name)
-                html = html.replace('{{last_name}}', user_.last_name)
-                html = html.replace('{{reset_code}}', code_)
-
-                text = text.replace('{{first_name}}', user_.first_name)
-                text = text.replace('{{last_name}}', user_.last_name)
-                text = text.replace('{{reset_code}}', code_)
-
-                # print('regiter mail', text)
-
-                # send mail to user
-                r = my_utils.send_email(request.data['email'], config(
-                    'PASSWORD_RESET_MAIL_SUBJECT'), html, text)
-                # print('password mail', r.text)
-
-        except User.DoesNotExist:
-            # print('sen error mail')
-            return Response({
-                "status": "failure",
-                "message": "no such item",
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({
-            "status": "success",
-            "message": "item successfully saved ",
-        }, status=status.HTTP_201_CREATED)
-
-
-class PasswordResetView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-    def post(self, request, *args, **kwargs):
-
-        if 'code' not in request.data or request.data['code'] is None:
-            return Response({
-                "status": "failure",
-                "message": "no code provided",
-                "error": "not such item"
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        if 'email' not in request.data or request.data['email'] is None:
-            return Response({
-                "status": "failure",
-                "message": "no email provided",
-                "error": "not such item"
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        if'new_password' not in request.data or 'new_password_confirm' not in request.data or request.data['new_password'] is None or request.data['new_password'] != request.data['new_password_confirm']:
-            return Response({
-                "status": "failure",
-                "message": "non matching passwords",
-                "error": "not such item"
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        user_ = User.objects.get(email=request.data['email'])
-        code_ = request.data['code']
-        if user_ is None:
-            return Response({
-                "status": "failure",
-                "message": "no such item",
-                "error": "not such item"
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        passReset = PasswordReset.objects.filter(
-            user=user_, code=code_, used=False).order_by('-date_created').first()
-        # print(passReset)
-        if passReset is None:
-            return Response({
-                "status": "failure",
-                "message": "no passwordRequest founded",
-                "error": "not such item"
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        if timezone.now() >= passReset.expiration:
-            return Response({
-                "status": "failure",
-                "message": "expired",
-                "error": "expired"
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        user_.set_password(request.data['new_password'])
-        user_.save()
-        passReset.used = True
-        passReset.date_used = timezone.now()
-        passReset.save()
-
-        return Response({
-            "status": "success",
-            "message": "item successfully saved",
-        }, status=status.HTTP_201_CREATED)
-
+    serializer_class = ChangePasswordSerializer
+    #permission_classes = [IsAuthenticated]
 
 # retrieve all users
+
+
 class UserRetrieveView(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserBasicSerializer

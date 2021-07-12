@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.fields import CharField
 from indicators.models import *
 
 
@@ -6,6 +7,44 @@ class LoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('email', 'password')
+
+
+class ChangePasswordSerializer(serializers.ModelSerializer):
+    confirm_password = CharField(write_only=True)
+    new_password = CharField(write_only=True)
+    old_password = CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'password',
+                  'old_password', 'new_password', 'confirm_password']
+
+    def update(self, instance, validated_data):
+
+        instance.password = validated_data.get('password', instance.password)
+
+        if not validated_data['new_password']:
+            raise serializers.ValidationError({'new_password': 'not found'})
+
+        if not validated_data['old_password']:
+            raise serializers.ValidationError({'old_password': 'not found'})
+
+        if not instance.check_password(validated_data['old_password']):
+            raise serializers.ValidationError(
+                {'old_password': 'wrong password'})
+
+        if validated_data['new_password'] != validated_data['confirm_password']:
+            raise serializers.ValidationError(
+                {'passwords': 'passwords do not match'})
+
+        if validated_data['new_password'] == validated_data['confirm_password'] and instance.check_password(validated_data['old_password']):
+            # instance.password = validated_data['new_password']
+            print(instance.password)
+            instance.set_password(validated_data['new_password'])
+            print(instance.password)
+            instance.save()
+            return instance
+        return instance
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -43,7 +82,6 @@ class UserBoxSerializer(serializers.ModelSerializer):
             phone=validated_data['phone'],
             user_type=validated_data['user_type'],
             avatar=validated_data['avatar'],
-
         )
         user.set_password(validated_data['password'])
         user.save()
@@ -63,7 +101,7 @@ class UserPutSerializer(serializers.ModelSerializer):
         model = User
         exclude = (
             'groups', 'is_superuser', 'password', 'date_joined',
-            'last_login', 'email')
+            'last_login')
 
 
 class UserVisiteurSerializer(serializers.ModelSerializer):
@@ -83,8 +121,19 @@ class UserGetSerializer(serializers.ModelSerializer):
 # Serializer for Projects
 
 
+# class IndicateurSuiviSerializer(serializers.ModelSerializer):
+#     nom_indicateur = serializers.ReadOnlyField(source='indicateur.libelle')
+
+#     class Meta:
+#         model = Indicateursuivi
+#         read_only_fields = ('id_indicateursuivi', 'nom_indicateur')
+#         fields = '__all__'
+#         #fields = ('id', 'category_name', 'name',)
+
+
 class IndicateurSerializer(serializers.ModelSerializer):
     nom_projet = serializers.ReadOnlyField(source='projet.nom')
+    #indicateursuivi = IndicateurSuiviSerializer(many=True, read_only=True)
 
     class Meta:
         model = Indicateur
@@ -121,13 +170,26 @@ class IndicateurGetSerializer(serializers.ModelSerializer):
 
 
 class IndicateurSuiviSerializer(serializers.ModelSerializer):
-    nom_indicateur = serializers.ReadOnlyField(source='indicateur.libelle')
+    # indicateur = serializers.SlugRelatedField(
+    #     many=True, queryset=Indicateursuivi.objects.all(), slug_field='indicateur')
+    #indicateur = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    libelle_indicateur = serializers.ReadOnlyField(source='indicateur.libelle')
+    code_indicateur = serializers.ReadOnlyField(source='indicateur.code')
 
     class Meta:
         model = Indicateursuivi
         read_only_fields = ('id_indicateursuivi', 'nom_indicateur')
         fields = '__all__'
-        #fields = ('id', 'category_name', 'name',)
+        #fields = ('id', 'category_name', 'name')
+
+    # def to_representation(self, instance):
+    #     self.fields['indicateur'] = IndicateurSerializer(read_only=True)
+    #     return super(IndicateurSuiviSerializer, self).to_representation(instance)
+    # def to_representation(self, instance):
+    #     response = super().to_representation(instance)
+    #     response['indicateur'] = IndicateurSerializer(
+    #         instance.indicateur).data
+    #     return response
 
 
 class IndicateurSuiviGetSerializer(serializers.ModelSerializer):
